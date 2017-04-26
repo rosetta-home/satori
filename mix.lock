@@ -1,0 +1,2 @@
+%{"tube": {:git, "https://github.com/narrowtux/Tube.git", "b80892f5d7fbb11493a44052d3ec50b9764e9b05", []},
+  "websocket_client": {:hex, :websocket_client, "1.2.1", "a965ce0be5583c90347400bceca66629e4debd5feb9bd516107e2924bdf39dad", [:rebar3], []}}
