@@ -2,49 +2,21 @@ defmodule SatoriChallenge.Client do
   use GenServer
   require Logger
 
-  @url "wss://open-data.api.satori.com"
-  @appkey System.get_env("SATORI_APP_KEY")
-  @channel "transportation"
-
   def start_link() do
-    url = "#{@url}?appkey=#{@appkey}"
-    Logger.info url
-    :websocket_client.start_link(url, __MODULE__, [])
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def init([]) do
-    {:once, %{}}
+  def init(:ok) do
+    {:ok, pub} = SatoriChallenge.Publish.start_link("rosetta-home")
+    {:ok, sub} = {:ok, 1}#SatoriChallenge.Subscription.start_link("transportation")
+    Process.send_after(self(), :publish, 0)
+    {:ok, %{pub: pub, sub: sub}}
   end
 
-  def onconnect(_req, state) do
-    :websocket_client.cast(self(), {:text, "{\"action\":\"rtm/subscribe\",\"body\":{\"channel\":\"transportation\"}}"})
-    {:ok, state}
+  def handle_info(:publish, state) do
+    SatoriChallenge.Publish.publish(state.pub, %{measurement: "ieq.co2", val: 501.3433, tag: :ok})
+    Process.send_after(self(), :publish, 5000)
+    {:noreply, state}
   end
 
-  def ondisconnect(reason, state) do
-    Logger.info "Connection Closed: #{inspect reason}"
-    {:reconnect, state}
-  end
-
-  def websocket_handle({:pong, msg}, conn, state) do
-    Logger.info("Received pong")
-    # This is how to access info about the connection/request
-    proto = :websocket_req.protocol(conn)
-    Logger.info("On protocol: #{inspect proto}")
-    {:ok, state}
-  end
-
-  def websocket_handle({:text, msg}, _conn, state) do
-    Logger.info("Received msg: #{inspect msg}")
-    {:ok, state}
-  end
-
-  def websocket_info(:start, _conn, state) do
-    {:ok, state}
-  end
-
-  def websocket_terminate(reason, _conn, state) do
-    Logger.info("Websocket closed: #{inspect reason}")
-    :ok
-  end
 end
