@@ -1,4 +1,4 @@
-defmodule SatoriChallenge.Client do
+defmodule SatoriChallenge.Test do
   use GenServer
   require Logger
 
@@ -7,8 +7,9 @@ defmodule SatoriChallenge.Client do
   end
 
   def init(:ok) do
-    {:ok, pub} = SatoriChallenge.Publish.start_link("rosetta-home")
-    {:ok, sub} = {:ok, 1}#SatoriChallenge.Subscription.start_link("transportation")
+    url = "#{Application.get_env(:satori, :url)}?appkey=#{Application.get_env(:satori, :app_key)}"
+    {:ok, pub} = SatoriChallenge.Publish.start_link(url, "rosetta-home", Application.get_env(:satori, :role_secret))
+    {:ok, sub} = SatoriChallenge.Subscription.start_link(url, "transportation")
     Process.send_after(self(), :publish, 0)
     {:ok, %{pub: pub, sub: sub}}
   end

@@ -1,8 +1,8 @@
-defmodule SatoriChallenge.Mixfile do
+defmodule Satori.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :satori_challenge,
+    [app: :satori,
      version: "0.1.0",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
@@ -16,7 +16,7 @@ defmodule SatoriChallenge.Mixfile do
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
     [extra_applications: [:logger, :ssl, :crypto, :websocket_client],
-     mod: {SatoriChallenge.Application, []}]
+     mod: {Satori.Application, []}]
   end
 
   # Dependencies can be Hex packages:
