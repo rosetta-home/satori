@@ -9,7 +9,7 @@ defmodule SatoriTest do
 
   test "publisher" do
     #Register for events
-    Satori.register(Publisher)
+    Satori.register(%PDU.Publish{channel: @role})
     data = %{measurement: "ieq.co2", val: 501.3433, tag: :ok}
     url = "#{Application.get_env(:satori, :url)}?appkey=#{Application.get_env(:satori, :app_key)}"
     Logger.info "URL: #{url}"
@@ -20,7 +20,7 @@ defmodule SatoriTest do
 
   test "subscription" do
     url = "#{Application.get_env(:satori, :url)}?appkey=#{Application.get_env(:satori, :app_key)}"
-    Satori.register(Subscription)
+    Satori.register(%PDU.Data{channel: @channel})
     {:ok, sub} = Satori.Subscription.start_link(url, "transportation")
     assert_receive %PDU.Data{channel: @channel}, 20_000
   end

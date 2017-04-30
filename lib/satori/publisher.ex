@@ -93,6 +93,6 @@ defmodule Satori.Publisher do
     Logger.debug "Publish: #{inspect msg}"
     data = %PDU.Publish{channel: role, message: msg}
     client |> Satori.Client.push(data)
-    Satori.dispatch(Publisher, data)
+    Satori.dispatch(%PDU.Publish{channel: role}, data)
   end
 end

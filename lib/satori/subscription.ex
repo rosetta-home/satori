@@ -22,7 +22,7 @@ defmodule Satori.Subscription do
   end
 
   def handle_info(%PDU{body: %PDU.Data{}} = msg, state) do
-    Satori.dispatch(Subscription, msg.body)
+    Satori.dispatch(%PDU.Data{channel: state.channel}, msg.body)
     {:noreply, state}
   end
 end
