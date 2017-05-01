@@ -58,4 +58,4 @@ If everything is configured correctly, you should see something resembling the f
 
 ## Use
 
-The client uses Elixir's [Registry](https://hexdocs.pm/elixir/Registry.html#content) for event publishing. You can use pattern matching to register for only the events you are interested in. See the [test/satori_test.exs](tests) for examples and also [satori_example application](https://github.com/NationalAssociationOfRealtors/satori_example) for a real world app.
+The client uses Elixir's [Registry](https://hexdocs.pm/elixir/Registry.html#content) for event publishing. You can use pattern matching to register for only the events you are interested in. See the [test/satori_test.exs](test/satori_test.exs) for examples and also [satori_example application](https://github.com/NationalAssociationOfRealtors/satori_example) for a real world app.
