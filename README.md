@@ -73,3 +73,5 @@ If everything is configured correctly, you should see something resembling the f
 ## Use
 
 The client uses Elixir's [Registry](https://hexdocs.pm/elixir/Registry.html#content) for event publishing. You can use pattern matching to register for only the events you are interested in. See the [test/satori_test.exs](test/satori_test.exs) for examples and also [satori_example application](https://github.com/NationalAssociationOfRealtors/satori_example) for a real world app.
+
+By default, Satori only responds/acks messages that include an id field. The authentication flow has to use id's in order to get results back. However, in general, unless you are very interested in the result of a publish, it's most likely not worth the overhead of requiring an ack. The library defaults to no-ack unless an id is specifically passed to the function.

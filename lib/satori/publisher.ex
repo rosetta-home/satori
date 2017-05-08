@@ -101,20 +101,20 @@ defmodule Satori.Publisher do
     Logger.debug "Publish: #{inspect msg}"
     data = %PDU.Publish{channel: role, message: msg}
     {:ok, sent} = client |> Satori.Client.push(data, id)
-    Satori.dispatch(%PDU.Publish{channel: role}, sent)
+    Satori.dispatch(%PDU.Publish{channel: role}, data)
   end
 
   defp handle_msg(client, role, {:read, {position, id}}) do
     Logger.debug "Read: #{position}"
     data = %PDU.Read{channel: role, position: position}
     {:ok, sent} = client |> Satori.Client.push(data, id)
-    Satori.dispatch(data, sent)
+    Satori.dispatch(%PDU.Read{channel: role}, data)
   end
 
   defp handle_msg(client, role, {:delete, id}) do
     Logger.debug("Delete: #{role}")
     data = %PDU.Delete{channel: role}
     {:ok, sent} = client |> Satori.Client.push(data, id)
-    Satori.dispatch(data, sent)
+    Satori.dispatch(%PDU.Delete{channel: role}, data)
   end
 end
