@@ -9,7 +9,7 @@ defmodule Satori.Registrar do
   def init(:ok), do: {:ok, %{}}
 
   def handle_call({:register, type}, {pid, _ref}, state) do
-    Logger.debug "Satori Registering: #{inspect pid}"
+    Logger.debug "Satori Registering: #{inspect type} for #{inspect pid}"
     Satori.Registry |> Registry.register(type, pid)
     {:reply, :ok, state}
   end

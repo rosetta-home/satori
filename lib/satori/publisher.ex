@@ -8,8 +8,16 @@ defmodule Satori.Publisher do
     :gen_fsm.start_link(__MODULE__, {url, role, secret}, [])
   end
 
-  def publish(pid, data) do
-    :gen_fsm.send_event(pid, {:publish, data})
+  def publish(pid, msg, id \\ nil) do
+    :gen_fsm.send_event(pid, {:publish, {msg, id}})
+  end
+
+  def read(pid, position, id \\ nil) do
+    :gen_fsm.send_event(pid, {:read, {position, id}})
+  end
+
+  def delete(pid, id \\ nil) do
+    :gen_fsm.send_event(pid, {:delete, id})
   end
 
   def init({url, role, secret}) do
@@ -17,12 +25,37 @@ defmodule Satori.Publisher do
     {:ok, :connecting, %{messages: [], role: role, secret: secret, client: client}}
   end
 
-  def closed({:publish, data}, state) do
+  def closed(data, state) do
     {:next_state, :closed, %{state | messages: [data | state.messages]}}
   end
 
-  def connecting({:publish, data}, state) do
+  def connecting(data, state) do
     {:next_state, :connecting, %{state | messages: [data | state.messages]}}
+  end
+
+  def disconnected(data, state) do
+    {:next_state, :disconnected, %{state | messages: [data | state.messages]}}
+  end
+
+  def connected(data, state) do
+    {:next_state, :connected, %{state | messages: [data | state.messages]}}
+  end
+
+  def handshake(data, state) do
+    {:next_state, :handshake, %{state | messages: [data | state.messages]}}
+  end
+
+  def authenticating(data, state) do
+    {:next_state, :authenticating, %{state | messages: [data | state.messages]}}
+  end
+
+  def open(data, state) do
+    state.client |> handle_msg(state.role, data)
+    {:next_state, :open, state}
+  end
+
+  def error({:publish, data}, state) do
+    {:next_state, :closed, state}
   end
 
   def connecting(:disconnected, state) do
@@ -31,31 +64,6 @@ defmodule Satori.Publisher do
 
   def connecting(:connected, state) do
     {:next_state, :connected, state}
-  end
-
-  def disconnected({:publish, data}, state) do
-    {:next_state, :disconnected, %{state | messages: [data | state.messages]}}
-  end
-
-  def connected({:publish, data}, state) do
-    {:next_state, :connected, %{state | messages: [data | state.messages]}}
-  end
-
-  def handshake({:publish, data}, state) do
-    {:next_state, :handshake, %{state | messages: [data | state.messages]}}
-  end
-
-  def authenticating({:publish, data}, state) do
-    {:next_state, :authenticating, %{state | messages: [data | state.messages]}}
-  end
-
-  def open({:publish, data}, state) do
-    state.client |> publish_msg(state.role, data)
-    {:next_state, :open, state}
-  end
-
-  def error({:publish, data}, state) do
-    {:next_state, :closed, state}
   end
 
   def handle_info(:connected, :connecting, state) do
@@ -67,7 +75,7 @@ defmodule Satori.Publisher do
     {:next_state, :closed, state}
   end
 
-  def handle_info(%PDU{body: %PDU.HandshakeResult{}} = result, :handshake, state) do
+  def handle_info(%PDU{body: %PDU.HandshakeOK{}} = result, :handshake, state) do
     hash =
       result
       |> Map.get(:body)
@@ -79,20 +87,34 @@ defmodule Satori.Publisher do
     {:next_state, :authenticating, state}
   end
 
-  def handle_info(%PDU{body: %PDU.AuthenticateResult{}}, :authenticating, state) do
-    state.messages |> Enum.each(fn m -> state.client |> publish_msg(state.role, m) end)
+  def handle_info(%PDU{body: %PDU.AuthenticateOK{}}, :authenticating, state) do
+    state.messages |> Enum.each(fn m -> state.client |> handle_msg(state.role, m) end)
     {:next_state, :open, %{state | messages: []}}
   end
 
   def handle_info(other, current_state, state) do
-    Logger.debug "Other: #{inspect other}"
+    Satori.dispatch(%PDU.Result{id: other.id, action: other.action, channel: state.role}, other)
     {:next_state, current_state, state}
   end
 
-  defp publish_msg(client, role, msg) do
+  defp handle_msg(client, role, {:publish, {msg, id}}) do
     Logger.debug "Publish: #{inspect msg}"
     data = %PDU.Publish{channel: role, message: msg}
-    client |> Satori.Client.push(data)
-    Satori.dispatch(%PDU.Publish{channel: role}, data)
+    {:ok, sent} = client |> Satori.Client.push(data, id)
+    Satori.dispatch(%PDU.Publish{channel: role}, sent)
+  end
+
+  defp handle_msg(client, role, {:read, {position, id}}) do
+    Logger.debug "Read: #{position}"
+    data = %PDU.Read{channel: role, position: position}
+    {:ok, sent} = client |> Satori.Client.push(data, id)
+    Satori.dispatch(data, sent)
+  end
+
+  defp handle_msg(client, role, {:delete, id}) do
+    Logger.debug("Delete: #{role}")
+    data = %PDU.Delete{channel: role}
+    {:ok, sent} = client |> Satori.Client.push(data, id)
+    Satori.dispatch(data, sent)
   end
 end

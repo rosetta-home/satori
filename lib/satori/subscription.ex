@@ -3,17 +3,28 @@ defmodule Satori.Subscription do
   alias Satori.PDU
   require Logger
 
-  def start_link(url, channel) do
-    GenServer.start_link(__MODULE__, {url, channel}, [])
+  def start_link(url, channel, id \\ nil) do
+    GenServer.start_link(__MODULE__, {url, channel, id}, [])
   end
 
-  def init({url, channel}) do
+  def unsubscribe(client, subscription_id, id \\ nil) do
+    GenServer.cast(client, {:unsubscribe, subscription_id, id})
+  end
+
+  def init({url, channel, id}) do
     {:ok, pid} = Satori.Client.start_link(url, self())
-    {:ok, %{channel: channel, client: pid}}
+    {:ok, %{channel: channel, client: pid, id: id}}
+  end
+
+  def handle_cast({:unsubscribe, subscription_id, id}, state) do
+    {:ok, sent} = Satori.Client.push(state.client, %PDU.Unsubscribe{subscription_id: subscription_id}, id)
+    Satori.dispatch(%PDU.Unsubscribe{subscription_id: subscription_id}, sent)
+    {:noreply, state}
   end
 
   def handle_info(:connected, state) do
-    Satori.Client.push(state.client, %PDU.Subscribe{channel: state.channel})
+    {:ok, sent} = Satori.Client.push(state.client, %PDU.Subscribe{channel: state.channel}, state.id)
+    Satori.dispatch(%PDU{id: state.id, body: %PDU.Subscribe{channel: state.channel}}, sent)
     {:noreply, state}
   end
 
@@ -21,8 +32,8 @@ defmodule Satori.Subscription do
     {:noreply, state}
   end
 
-  def handle_info(%PDU{body: %PDU.Data{}} = msg, state) do
-    Satori.dispatch(%PDU.Data{channel: state.channel}, msg.body)
+  def handle_info(msg, state) do
+    Satori.dispatch(%PDU.Result{id: msg.id, action: msg.action, channel: state.channel}, msg)
     {:noreply, state}
   end
 end
