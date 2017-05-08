@@ -16,7 +16,7 @@ defmodule SatoriTest do
     {:ok, pub} = Satori.Publisher.start_link(url, @role, Application.get_env(:satori, :role_secret))
     data = %{measurement: "ieq.co2", val: 501.3433, tag: :ok}
     Satori.Publisher.publish(pub, data, @publish_id)
-    assert_receive %PDU{body: %PDU.PublishOK{}}, 20_000
+    assert_receive %PDU{body: %PDU.PublishOK{}}, 5_000
   end
 
   test "subscription" do
@@ -25,16 +25,16 @@ defmodule SatoriTest do
     Satori.register(%PDU.Result{action: PDU.Data.action(), channel: @channel})
 
     {:ok, sub} = Satori.Subscription.start_link(url, @channel, @sub_id)
-    assert_receive %PDU{id: @sub_id, body: %PDU.SubscribeOK{}}, 20_000
+    assert_receive %PDU{id: @sub_id, body: %PDU.SubscribeOK{}}, 5_000
     assert_receive %PDU{body: %PDU.Data{}}, 5_000
   end
 
-  test "Publish error" do
+  test "authentication error" do
     url = "#{Application.get_env(:satori, :url)}?appkey=#{Application.get_env(:satori, :app_key)}"
     Satori.register(%PDU.Result{id: "authenticate", action: PDU.AuthenticateError.action(), channel: @channel})
     {:ok, pub} = Satori.Publisher.start_link(url, @channel, Application.get_env(:satori, :role_secret))
     data = %{measurement: "ieq.co2", val: 501.3433, tag: :ok}
     Satori.Publisher.publish(pub, data, @publish_id)
-    assert_receive %PDU{body: %PDU.AuthenticateError{}}, 20_000
+    assert_receive %PDU{body: %PDU.AuthenticateError{}}, 5_000
   end
 end

@@ -33,6 +33,14 @@ defmodule Satori.Publisher do
     {:next_state, :connecting, %{state | messages: [data | state.messages]}}
   end
 
+  def connecting(:disconnected, state) do
+    {:next_state, :disconnected, state}
+  end
+
+  def connecting(:connected, state) do
+    {:next_state, :connected, state}
+  end
+
   def disconnected(data, state) do
     {:next_state, :disconnected, %{state | messages: [data | state.messages]}}
   end
@@ -56,14 +64,6 @@ defmodule Satori.Publisher do
 
   def error({:publish, data}, state) do
     {:next_state, :closed, state}
-  end
-
-  def connecting(:disconnected, state) do
-    {:next_state, :disconnected, state}
-  end
-
-  def connecting(:connected, state) do
-    {:next_state, :connected, state}
   end
 
   def handle_info(:connected, :connecting, state) do
