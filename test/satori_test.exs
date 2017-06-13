@@ -26,7 +26,7 @@ defmodule SatoriTest do
     data = %{measurement: "ieq.co2", val: 501.3433, tag: :ok}
     Satori.Publisher.publish(pub, data)
     #this doesn't actually get an ack from Satori, just that the library sent the message.
-    assert_receive %PDU.Publish{channel: @role}, 5_000
+    assert_receive %PDU.Publish{channel: @role}, 10_000
   end
 
   test "subscription" do

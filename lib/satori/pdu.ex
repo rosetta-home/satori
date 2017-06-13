@@ -236,7 +236,7 @@ defmodule Satori.PDU do
   defmodule Data do
     use Satori.PDU.Types
     @derive [Poison.Encoder]
-    def action, do: @data
+    def action, do: @subscription_data
     defstruct position: nil,
       next: nil,
       channel: nil,

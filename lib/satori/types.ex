@@ -9,6 +9,7 @@ defmodule Satori.PDU.Types do
       @write "rtm/write"
       @delete "rtm/delete"
       @subscription_info "rtm/subscription/info"
+      @subscription_data "rtm/subscription/data"
       @data "rtm/channel/data"
 
       #RTM Success Results

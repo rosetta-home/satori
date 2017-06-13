@@ -33,7 +33,7 @@ defmodule Satori.Subscription do
   end
 
   def handle_info(msg, state) do
-    Satori.dispatch(%PDU.Result{id: msg.id, action: msg.action, channel: state.channel}, msg)
+    Satori.dispatch(%PDU.Result{id: msg |> Map.get(:id), action: msg.action, channel: state.channel}, msg)
     {:noreply, state}
   end
 end

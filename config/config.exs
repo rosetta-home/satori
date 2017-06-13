@@ -3,7 +3,7 @@
 use Mix.Config
 
 config :satori,
-  url: "wss://open-data.api.satori.com",
+  url: "wss://open-data.api.satori.com/v2",
   app_key: System.get_env("SATORI_APP_KEY"),
   role_secret: System.get_env("SATORI_ROLE_SECRET")
 

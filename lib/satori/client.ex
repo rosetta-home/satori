@@ -37,6 +37,11 @@ defmodule Satori.Client do
 
   #RTM Results
 
+  def websocket_info(info, conn, state) do
+    Logger.info "INFO: #{inspect info} - #{inspect conn}"
+    {:reply, {:text, "ok"}, state}
+  end
+
   def websocket_handle({:text, <<"{\"action\":\"#{@publish_ok}\"", rest :: binary >> = msg}, _conn, state) do
     msg |> parent_send(state.parent, %PDU{body: %PDU.PublishOK{}})
     {:ok, state}
@@ -68,6 +73,11 @@ defmodule Satori.Client do
   end
 
   def websocket_handle({:text, <<"{\"action\":\"#{@data}\"", rest::binary >> = msg}, _conn, state) do
+    msg |> parent_send(state.parent, %PDU{body: %PDU.Data{}})
+    {:ok, state}
+  end
+
+  def websocket_handle({:text, <<"{\"action\":\"#{@subscription_data}\"", rest::binary >> = msg}, _conn, state) do
     msg |> parent_send(state.parent, %PDU{body: %PDU.Data{}})
     {:ok, state}
   end
