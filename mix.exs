@@ -20,7 +20,7 @@ defmodule Satori.Mixfile do
 
   defp deps do
     [
-      {:websocket_client, "~> 1.2"},
+      {:websocket_client, "~> 1.3"},
       {:poison, "~> 3.1"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
